@@ -22,7 +22,7 @@
 
     <sec:ifAllGranted roles="ROLE_ADMIN">
         <div class="col-sm-12 " style="overflow-wrap: break-word;margin-top: 15%">
-            <a href="${createLink(controller:'topic',action:'createTopic')}" class="a">
+            <a href="${createLink(controller:'admin',action:'listUser')}" class="a">
                 <i class="fas fa-users" style=""></i>
                 <label style="font-size: medium">Users</label>
             </a>
@@ -52,6 +52,15 @@
             <a href="${createLink(controller:'user',action:'profile')}" class="a">
                 <i class="far fa-user-circle"></i>
                 <label style="font-size: medium">Profile</label>
+            </a>
+        </div>
+    </sec:ifAnyGranted>
+
+    <sec:ifAnyGranted roles="ROLE_USER,ROLE_ADMIN">
+        <div class="col-sm-12 " style="overflow-wrap: break-word;margin-top: 15%">
+            <a href="${createLink(controller:'topic',action:'showPost')}" class="a">
+                <i class="fas fa-file-signature"></i>
+                <label style="font-size: medium">Posts</label>
             </a>
         </div>
     </sec:ifAnyGranted>

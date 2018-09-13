@@ -3,7 +3,8 @@
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 
 <div class="table-responsive">
-    <table class="table table-hover table-striped table-condensed" style="border: 1px solid gray;" id="topicTable">
+
+    <table class="table table-hover table-striped" style="border: 1px solid gray;" id="topicTable">
         <thead>
         <tr style="background-color: rgba(70,188,220,.5);">
             <td>Topic Name</td>
@@ -18,6 +19,7 @@
             <g:else>
                 <td>Action</td>
             </g:else>
+            <td>Subscribers</td>
 
         </tr>
         </thead>
@@ -27,7 +29,9 @@
 
                 <tbody>
                 <tr>
-                    <td>${topic.topicName}</td>
+                    <td>
+                        <g:link controller="topic" action="showPost" params="[topicId: topic?.uuid]">${topic.topicName}</g:link>
+                    </td>
                     <td>${topic.visibility}</td>
                     <td>${com.ssDemo.Subscription.countByTopic(topic)}</td>
                     <td>${topic.getDateCreatedString()}</td>
@@ -37,9 +41,14 @@
                                 Subscribed
                             </td>
                             <td>
-                               <button class="btn btn-link" id="share_${topic?.uuid}"
+                                <button class="btn btn-link" id="share_${topic?.uuid}"
                                         onclick="share(${topic?.id}, ${user?.id})">
                                     <i class="fas fa-marker" style="color:deepskyblue"></i></button>
+                                <g:if test="${topic?.createdBy?.id != user?.id}">
+                                <button class="btn btn-link" id="unsubscribe_${topic?.uuid}"
+                                        onclick="unsubscribe(${topic?.id}, ${user?.id})">
+                                    <i class="fas fa-backspace" style="color: red"></i></button>
+                                </g:if>
                             </td>
 
                         </g:if>
@@ -68,13 +77,20 @@
                     </g:if>
                     <g:else>
                         <td>
-                            <i class="far fa-edit" style="color: blue"></i>
-                            <i class="fas fa-trash-alt" style="color:red;"></i>
+                            <button class="btn btn-link" id="share_${topic?.uuid}"
+                                    onclick="edit(${topic?.id}, ${user?.id}, '${topic?.topicName}', '${topic?.visibility}')"><i class="far fa-edit"
+                                                                                  style="color: blue"></i></button>
+                            <button class="btn btn-link" id="share_${topic?.uuid}"
+                                    onclick="del(${topic?.id}, ${user?.id})"><i class="fas fa-trash-alt"
+                                                                                  style="color:red;"></i></button>
                             <button class="btn btn-link" id="share_${topic?.uuid}"
                                     onclick="share(${topic?.id}, ${user?.id})">
                                 <i class="fas fa-marker" style="color:deepskyblue"></i></button>
                         </td>
                     </g:else>
+                    <td><button class="btn btn-link" id="list_${topic?.uuid}"
+                                onclick="subscribersList(${topic?.id})">
+                        <i class="fas fa-list-alt"></i></button></td>
                 </tr>
                 </tbody>
 
@@ -91,6 +107,7 @@
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
             </tr>
 
             </tbody>
@@ -103,6 +120,13 @@
 
 </div>
 
+<div id="editTopicModalDiv">
+<g:render template="/templates/editTopicModalTemplate" model="[user: user]"/>
+</div>
+
+<div id="subscribersModalDiv">
+
+</div>
 <script>
     function subscribe(topicId, userId) {
         var seriousnessDiv = document.getElementById("seriousness_" + topicId);
@@ -136,20 +160,101 @@
         var shareTopicModalDiv = document.getElementById("shareTopicModalDiv");
         $.ajax({
             url: "${createLink(controller:'user' ,action:'openShareTopicModal' )}",
-            data: {userId: userId,topicId: topicId},
+            data: {userId: userId, topicId: topicId},
             success: function (data) {
-                if(data.status=="200"){
+                if (data.status == "200") {
                     $(shareTopicModalDiv).html(data.template);
                     $("#shareTopicModal").modal();
-                }else{
+                } else {
                     $.notify("Not Able to Share This Topic");
                 }
             },
             error: function () {
-                $.notify("Not Able to open Share This Topic","error");
+                $.notify("Not Able to open Share This Topic", "error");
             }
         })
     }
 
+    function edit(topicId, userId, topicName, visibility){
+        var topicId = topicId;
+        var userId = userId;
+        var topicName = topicName;
+        var visibility = visibility;
+        var editTopicModalDiv = document.getElementById("editTopicModalDiv");
+        $("#editTopicModal #editTopicName").val(topicName);
+        $("#editTopicModal #editVisibility").val(visibility);
+        $("#editTopicModal #editTopicId").val(topicId);
+        $("#editTopicModal").modal();
+
+
+    }
+
+    function del(topicId, userId){
+        var topicId = topicId;
+        var userId = userId;
+        var commanTopicTemplateDiv = document.getElementById("myTopicsDiv");
+        var delConfirm = confirm("Are You Sure To Delete");
+        if(delConfirm){
+            $.ajax({
+                url: "${createLink(controller: 'topic', action: 'deleteTopic')}",
+                data: {userId: userId, topicId: topicId},
+                success: function (data) {
+                    if(data.status=="200"){
+                        $(commanTopicTemplateDiv).html(data.template);
+                        $.notify("Topic Deleted Successfully","success");
+                    } else{
+                        $.notify("Not Able to Delete","error");
+                    }
+                },
+                error: function () {
+                    $.notify("Not Able To Delete","error");
+                }
+            })
+        } else{
+            $.notify("Deletion Aborted","success");
+        }
+
+    }
+
+    function unsubscribe(topicId, userId){
+        var topicId = topicId;
+        var userId = userId;
+        var allTopicDiv = document.getElementById("allTopicsDiv");
+        $.ajax({
+            url: "${createLink(controller: 'topic', action: 'unsubscribeFromAllTopicList')}",
+            data: {userId: userId, topicId: topicId},
+            success: function (data) {
+                if (data.status == "200") {
+                    $(allTopicDiv).html(data.template);
+                    $.notify("Topic Unsubscribed ", "success");
+                } else {
+                    $.notify("Error", "error");
+                }
+            },
+            error: function () {
+                $.notify("Error", "error");
+            }
+        })
+    }
+
+    function subscribersList(topicId){
+        var topicId = topicId;
+        var subscribersModalDiv = document.getElementById("subscribersModalDiv");
+        $.ajax({
+            url: "${createLink(controller: 'topic', action: 'subscribersList')}",
+            data: {topicId:topicId},
+            success: function (data) {
+                if(data.status=="200"){
+                    $(subscribersModalDiv).html(data.template);
+                    $("#subscribersModal").modal();
+                } else{
+                    $.notify("No Subscribers Found","error");
+                }
+            },
+            error: function () {
+                $.notify("Error","error");
+            }
+        })
+    }
 </script>
 

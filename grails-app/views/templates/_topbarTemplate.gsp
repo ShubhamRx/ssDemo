@@ -3,7 +3,7 @@
 <sec:ifAnyGranted roles="ROLE_USER,ROLE_ADMIN">
 
     <div class="col-sm-5" style="padding-top: 3%">
-        <label style="font-size: medium" class="pull-right">Welcome ${user.firstName}</label>
+        <label style="font-size: medium" class="pull-right"><g:link controller="user" action="dashboard" style="color: white;text-decoration:none">Welcome ${user.firstName}</g:link></label>
     </div>
 
     <div class="col-sm-1" id="notificationTemplateDiv" style="padding-top:3%; border-left: 1px solid gray ">

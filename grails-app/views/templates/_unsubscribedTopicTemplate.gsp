@@ -15,7 +15,9 @@
 
             <div class="col-sm-9" style="border-left: 1px solid gray">
                 <div class="col-sm-12">
-                    <label style="font-size: x-large">${topic?.topicName}</label>
+                    <label style="font-size: x-large">
+                        <g:link controller="topic" action="showPost" params="[topicId: topic?.uuid]">${topic?.topicName}</g:link>
+                    </label>
                 </div>
 
                 <div class="col-sm-12">

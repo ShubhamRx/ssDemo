@@ -29,7 +29,7 @@ class User implements Serializable {
     Date lastUpdated
     String UID = UUID.randomUUID()
 
-    static hasMany = [topics:Topic]
+    static hasMany = [topics:Topic,posts: Post]
 
 	Set<Role> getAuthorities() {
 		UserRole.findAllByUser(this)*.role
@@ -81,7 +81,7 @@ class User implements Serializable {
         return this.firstName+" "+this.lastName
     }
 
-	String UID(){
-		return this.UID
-	}
+	String stringDateCreated(){
+        return this.dateCreated.format("dd-MMM-yyyy")
+    }
 }

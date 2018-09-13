@@ -6,13 +6,18 @@ import grails.plugin.springsecurity.annotation.Secured
 @Secured(['permitAll'])
 class PublicController {
 
+    def springSecurityService
     def index() { }
 
     def login(){
+        if(springSecurityService.isLoggedIn()){
+            redirect(controller:'user',action: 'dashboard')
+        } else{
+            List<Topic> topicList = getMostSubscribedTopics()
+            println(topicList)
+            render(view:'/login/auth', model:[topicList: topicList])
+        }
 
-        List<Topic> topicList = getMostSubscribedTopics()
-        println(topicList)
-        render(view:'/login/auth', model:[topicList: topicList])
     }
 
     List<Topic> getMostSubscribedTopics(){

@@ -126,3 +126,4 @@ environments:
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
 
 uploadFolder: "/home/shubham/Projects/ssDemo/grails-app/assets/images/"
+documentFolder : "/home/shubham/Projects/ssDemo/grails-app/assets/documents/"

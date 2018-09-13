@@ -1,4 +1,6 @@
 package com.ssDemo
+
+import CommandObjects.PostCO
 import CommandObjects.TopicCO
 import com.ssDemo.Enums.Seriousness
 import grails.transaction.Transactional
@@ -75,5 +77,56 @@ class TopicService {
         } else{
             return null
         }
+    }
+
+    void deleteSubscriptionsForTopic(Topic topic){
+        Subscription.findAllByTopic(topic).each {
+            it.delete()
+        }
+    }
+
+    void deleteInviteForTopic(Topic topic){
+        Invite.findAllByForTopic(topic).each {
+            it.delete()
+        }
+    }
+
+    Boolean deleteTopic(Topic topic){
+        deleteInviteForTopic(topic)
+        deleteSubscriptionsForTopic(topic)
+        topic.delete()
+        println("Topic Deleted = "+Topic.exists(topic.id))
+        return Topic.exists(topic.id)
+    }
+
+    Topic editTopic(Topic topic, TopicCO topicCO){
+        topic.properties = topicCO.properties
+        if(topic.save()){
+            return topic
+        } else{
+            return null
+        }
+    }
+
+    List<Topic> getAllTopicsForUser(User user){
+        List<Topic> publicTopicList = Topic.getPublicTopicList()
+        List<Topic> subscribedTopicList = getSubscribedTopicsList(user)
+        List<Topic> privateTopicList = subscribedTopicList - publicTopicList
+        List<Topic> allTopicList = publicTopicList + privateTopicList
+        return allTopicList
+    }
+
+    Post createPost(PostCO postCO,String path=null){
+        Post post = new Post()
+        post.properties = postCO.properties
+        if(path){
+            post.document = path
+        }
+        if(post.save()){
+            return post
+        } else{
+            return null
+        }
+        return post
     }
 }

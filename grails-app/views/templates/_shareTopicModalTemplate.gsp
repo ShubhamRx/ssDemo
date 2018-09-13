@@ -32,7 +32,7 @@
                                             <input type="button" id="invite_${targetUser?.id}"
                                                                            class="btn btn-primary"
                                                                            value="Invite ${targetUser?.firstName}"
-                                                                           onclick="invite(${targetUser?.id}, ${topic?.id})"/>
+                                                                           onclick="invite(${targetUser?.id}, ${topic?.id})" />
                                             <input type="button" id="pending_${targetUser?.id}"
                                                    class="btn btn-info" value="Pending" disabled/>
                                             <g:if test="${com.ssDemo.Invite.findByInvitationToAndForTopic(targetUser,topic)}">

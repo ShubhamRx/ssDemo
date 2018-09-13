@@ -14,6 +14,7 @@ class Topic {
     String uuid = UUID.randomUUID()
 
     static belongsTo = [createdBy: User]
+    static hasMany = [posts: Post]
 
     static constraints = {
         uuid(nullable: false)
@@ -40,5 +41,10 @@ class Topic {
             eq('visibility', com.ssDemo.Enums.Visibility.PUBLIC)
         }
         return publicTopicList
+    }
+
+    List<User> subscribersList(){
+        List<User> userList = Subscription.findAllByTopic(this)?.user
+        return userList
     }
 }

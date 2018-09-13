@@ -64,15 +64,30 @@
                        style="text-align: center;background: transparent;border: none" disabled></td>
         </tr>
 
-        <tr><td align="center">
-            <div id="showUpdateDiv">
-                <input type="button" name="showUpdate" id="showUpdate" value="Edit" class="btn btn-primary" onclick="enableUpdate()"></div>
 
-            <div id="updateDiv">
-                <input type="button" name="updateBtn" id="updateBtn" value="Update" class="btn btn-primary" style="display: none" onclick="disableUpdate(${user?.id})"></div>
+        <div id="updatePasswordDiv">
+            <g:render template="/templates/updatePasswordTemplate"/>
+        </div>
+
+
+        <tr><td align="center">
+            <div id="showUpdateDiv" class="form-group">
+                <input type="button" name="showUpdate" id="showUpdate" value="Edit" class="btn btn-primary"
+                       onclick="enableUpdate()"></div>
+
+            <div id="updateDiv" class="form-group">
+                <input type="button" name="updateBtn" id="updateBtn" value="Update" class="btn btn-primary"
+                       style="display: none" onclick="disableUpdate(${user?.id})"></div>
+
+            <div id="showUpdatePasswordDiv" class="form-group">
+                <input type="button" name="showUpdatePassword" id="showUpdatePassword" value="Update Password"
+                       class="btn btn-link"
+                       onclick="enableUpdatePassword()"/>
+            </div>
 
         </td></tr>
     </table>
+
 </div>
 
 <script>
@@ -81,7 +96,9 @@
         var editDiv = document.getElementById("showUpdateDiv");
         var firstName = document.getElementById("firstName");
         var lastName = document.getElementById("lastName");
+        var updatePasswordBtn = document.getElementById("showUpdatePassword");
         $(editDiv).hide();
+        $(updatePasswordBtn).hide();
         $(updateDiv).show();
         $(firstName).removeAttr("disabled");
         $(lastName).removeAttr("disabled");
@@ -96,36 +113,54 @@
         var profileDiv = document.getElementById("profileDiv");
         var firstNameError = document.getElementById("firstNameError");
         var lastNameError = document.getElementById("lastNameError");
-        if(firstName.value && lastName.value){
+        if (firstName.value && lastName.value) {
             $(updateDiv).hide();
             $(editDiv).show();
-            $(firstName).attr("disabled","disabled");
-            $(lastName).attr("disabled","disabled");
+            $(firstName).attr("disabled", "disabled");
+            $(lastName).attr("disabled", "disabled");
             $.ajax({
                 url: "${createLink(controller: 'user',action: 'updateProfile')}",
-                data: {userId: userId,firstName: firstName.value,lastName: lastName.value},
+                data: {userId: userId, firstName: firstName.value, lastName: lastName.value},
                 success: function (data) {
                     $(profileDiv).html(data.template);
-                    $.notify("Profile Updated","success");
+                    $.notify("Profile Updated", "success");
                 },
                 error: function () {
-                    $.notify("Error in Updating","error");
+                    $.notify("Error in Updating", "error");
                 }
 
             })
-        }else{
-            if(!firstName.value){
+        } else {
+            if (!firstName.value) {
                 $(firstNameError).html("First Name Can Not Be Empty");
-            } else{
+            } else {
                 $(firstNameError).html("");
             }
-            if(!lastName.value){
+            if (!lastName.value) {
                 $(lastNameError).html("Last Name Can Not Be Empty");
 
-            } else{
+            } else {
                 $(lastNameError).html("");
             }
         }
 
     }
+
+    function enableUpdatePassword() {
+        var editBtn = document.getElementById("showUpdate");
+        var showPasswordBtn = document.getElementById("showUpdatePassword");
+        var updatePasswordBtn = document.getElementById("updatePassword");
+        var password = document.getElementById("newPassword");
+        var cPassword = document.getElementById("confirmPassword");
+        var oldPassword = document.getElementById("oldPassword");
+        var cancelBtn = document.getElementById("cancel");
+        $(editBtn).hide();
+        $(showPasswordBtn).hide();
+        $(updatePasswordBtn).show();
+        $(cancelBtn).show();
+        $(password).show();
+        $(cPassword).show();
+        $(oldPassword).show();
+    }
+
 </script>

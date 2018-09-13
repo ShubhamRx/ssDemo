@@ -1,9 +1,12 @@
 package com.ssDemo
 
+import CommandObjects.PostCO
 import CommandObjects.TopicCO
 import com.ssDemo.User
 import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
+import grails.plugin.springsecurity.authentication.encoding.BCryptPasswordEncoder
+import org.springframework.web.multipart.MultipartFile
 
 @Secured(['ROLE_ADMIN', 'ROLE_USER'])
 class UserController {
@@ -41,10 +44,7 @@ class UserController {
 
     def allTopic() {
         User user = springSecurityService.currentUser as User
-        List<Topic> publicTopicList = Topic.getPublicTopicList()
-        List<Topic> subscribedTopicList = topicService.getSubscribedTopicsList(user)
-        List<Topic> privateTopicList = subscribedTopicList - publicTopicList
-        List<Topic> allTopicList = publicTopicList + privateTopicList
+        List<Topic> allTopicList = topicService.getAllTopicsForUser(user)
         render(view: '/User/allTopics', model: [user: user, allTopicList: allTopicList, showStatus: true])
 
     }
@@ -75,7 +75,7 @@ class UserController {
         User user = params?.userId ? User.findById(params?.userId) : springSecurityService.currentUser as User
         Map result = [:]
         Topic topic = Topic.findById(params.topicId)
-        List<User> userList = User.list() - Subscription.findAllByTopic(topic).user - Invite.findByStatus(com.ssDemo.Enums.InviteStatus.REJECTED)?.invitationTo ?: []
+        List<User> userList = User.list() - Subscription.findAllByTopic(topic).user - Invite.findAllByStatusAndForTopic(com.ssDemo.Enums.InviteStatus.REJECTED,topic)?.invitationTo ?: []
         result.template = g.render(template: '/templates/shareTopicModalTemplate', model: [user:user,topic:topic,userList:userList])
         result.status = "200"
         render result as JSON
@@ -111,5 +111,47 @@ class UserController {
         }
         result.template = g.render(template: '/templates/notificationTemplate', model: [user: user])
         render result as JSON
+    }
+
+    def editTopic(TopicCO topicCO){
+        println("Controller: User, Action: editTopic")
+        topicCO.createdBy = User.findById(params.createdBy)
+        topicCO.visibility = com.ssDemo.Enums.Visibility.valueOf(params.visibility)
+        Topic topic = Topic.get(params.topicId)
+        topic = topicService.editTopic(topic,topicCO)
+        redirect(action: 'myTopic')
+
+    }
+
+    def updatePassword(){
+        println("Controller: User,Action: updatePassword")
+        User user = springSecurityService.currentUser as User
+        Map result = [:]
+        String userPassword = user.password
+        String newPassword = params?.newPassword
+        String oldPassword = params?.oldPassword
+        println("User Password = "+userPassword)
+        println("New Password = "+newPassword)
+        println("Old Password = "+oldPassword)
+        println("Old Password Encoded = "+ springSecurityService.encodePassword(oldPassword))
+        render result as JSON
+    }
+
+    def createPost(PostCO postCO){
+        println("Controller: User,Action: createPost")
+        User user = params?.userID ? User.findById(params?.userID) : springSecurityService.currentUser as User
+        Topic topic = Topic.findById(params?.topic)
+        postCO.user = user
+        postCO.topic = topic
+        MultipartFile file = request.getFile('document')
+        String path = file.originalFilename
+        if(path && path.substring(path.length()-3,path.length()).equals("pdf"))
+        {
+            file.transferTo(new File("${grailsApplication.config.documentFolder}"+path))
+            Post post = topicService.createPost(postCO,path)
+        } else if(!path) {
+            Post post = topicService.createPost(postCO)
+        }
+        redirect(controller:'topic', action: 'showPost')
     }
 }
