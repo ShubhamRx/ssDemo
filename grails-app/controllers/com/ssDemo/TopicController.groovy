@@ -2,6 +2,10 @@ package com.ssDemo
 
 import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
+import org.apache.tomcat.util.http.fileupload.disk.DiskFileItem
+import org.grails.core.io.MockFileResource
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.multipart.commons.CommonsMultipartFile
 
 import java.awt.Desktop
 
@@ -187,13 +191,17 @@ class TopicController {
         println("Controller: Topic, Action: readDocument")
         User user = springSecurityService.currentUser as User
         String path = params?.document
-        println(path)
-        File file = new File("${grailsApplication.config.documentFolder}"+path)
-        if(path.substring(path.length()-3,path.length()).equals("pdf")){
-            render file: file
+        if(path){
+            File file = new File("${grailsApplication.config.documentFolder}"+path)
+            if(path.substring(path.length()-3,path.length()).equalsIgnoreCase("pdf")){
+                render(file: file , contentType: "application/pdf")
+            } else{
+                render "File Is Not Pdf"
+            }
         } else{
-            render "File Is Not Pdf"
+            redirect(action:'showPost')
         }
+
 
     }
 }

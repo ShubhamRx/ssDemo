@@ -15,7 +15,7 @@
 </div>
 <div class="col-sm-10" style="padding-left: 5%">
     <div class="col-sm-12" style="margin-top: 5%" id="postDiv">
-        <g:render template="/templates/postTemplate" model="[user:user, posts: posts, subscribedTopics: subscribedTopics]" />
+        <g:render template="/templates/postTemplate" model="[user:user, posts: posts, subscribedTopics: subscribedTopics, myPost: myPost]" />
     </div>
 </div>
 </body>

@@ -138,20 +138,29 @@ class UserController {
     }
 
     def createPost(PostCO postCO){
-        println("Controller: User,Action: createPost")
+        println("Controller: User, Action: createPost")
         User user = params?.userID ? User.findById(params?.userID) : springSecurityService.currentUser as User
         Topic topic = Topic.findById(params?.topic)
         postCO.user = user
         postCO.topic = topic
         MultipartFile file = request.getFile('document')
         String path = file.originalFilename
-        if(path && path.substring(path.length()-3,path.length()).equals("pdf"))
+        if(path && path.substring(path.length()-3,path.length()).equalsIgnoreCase("pdf"))
         {
             file.transferTo(new File("${grailsApplication.config.documentFolder}"+path))
+            println("Content Type = "+file.contentType)
             Post post = topicService.createPost(postCO,path)
         } else if(!path) {
             Post post = topicService.createPost(postCO)
         }
         redirect(controller:'topic', action: 'showPost')
+    }
+
+    def myPost(){
+        println("Controller: User, Action: myPost")
+        User user= springSecurityService.currentUser as User
+        List<Post> postList = Post.findAllByUser(user)
+        List<Topic> subscribedTopics = Subscription.findAllByUser(user)*.topic
+        render(view: '/User/posts', model: [user: user, posts: postList, subscribedTopics: subscribedTopics, myPost:true])
     }
 }

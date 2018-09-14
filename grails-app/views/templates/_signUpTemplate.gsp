@@ -30,6 +30,7 @@
                 <span class="col-sm-12" style="color:red"><g:message
                         error="${renderErrors(bean: userCO, field: 'email')}"/></span>
             </g:hasErrors>
+            <div class="col-sm-12" style="color: red" id="emailMsg"></div>
             <input type="text" name="email" id="email" class="form-control" value="${userCO?.email}"
                    placeholder="Email">
         </div>
@@ -134,6 +135,19 @@
             $("#signUpBtn").attr('disabled',true);
         } else{
             $(error).html('');
+            $("#signUpBtn").attr('disabled',false);
+        }
+    })
+
+    $("#email").focusout(function () {
+        var email = document.getElementById("email").value;
+        var email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
+        var error= document.getElementById("emailMsg");
+        if(email_regex.test(email)==false) {
+            $(error).html("Your Email Id is Not Valid");
+            $("#signUpBtn").attr('disabled', true);
+        } else{
+            $(error).html("");
             $("#signUpBtn").attr('disabled',false);
         }
     })

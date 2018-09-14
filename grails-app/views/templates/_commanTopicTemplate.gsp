@@ -77,10 +77,10 @@
                     </g:if>
                     <g:else>
                         <td>
-                            <button class="btn btn-link" id="share_${topic?.uuid}"
+                            <button class="btn btn-link" id="edit_${topic?.uuid}"
                                     onclick="edit(${topic?.id}, ${user?.id}, '${topic?.topicName}', '${topic?.visibility}')"><i class="far fa-edit"
                                                                                   style="color: blue"></i></button>
-                            <button class="btn btn-link" id="share_${topic?.uuid}"
+                            <button class="btn btn-link" id="del_${topic?.uuid}"
                                     onclick="del(${topic?.id}, ${user?.id})"><i class="fas fa-trash-alt"
                                                                                   style="color:red;"></i></button>
                             <button class="btn btn-link" id="share_${topic?.uuid}"

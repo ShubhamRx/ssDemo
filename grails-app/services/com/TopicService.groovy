@@ -4,6 +4,7 @@ import CommandObjects.PostCO
 import CommandObjects.TopicCO
 import com.ssDemo.Enums.Seriousness
 import grails.transaction.Transactional
+import grails.util.Holders
 
 @Transactional
 class TopicService {
@@ -91,9 +92,27 @@ class TopicService {
         }
     }
 
+    void deletePostForTopic(Topic topic){
+        Post.findAllByTopic(topic).each {
+            String path = it.document
+            if(path){
+                File file = new File("${Holders.grailsApplication.config.documentFolder}"+path)
+                if(file.exists()){
+                    println("File Found....Deleting File")
+                    file.delete()
+                    println("File Deleted")
+                } else{
+                    println("No File For This Topic....Deleting Topic")
+                }
+            }
+            it.delete()
+        }
+    }
+
     Boolean deleteTopic(Topic topic){
         deleteInviteForTopic(topic)
         deleteSubscriptionsForTopic(topic)
+        deletePostForTopic(topic)
         topic.delete()
         println("Topic Deleted = "+Topic.exists(topic.id))
         return Topic.exists(topic.id)

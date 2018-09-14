@@ -64,6 +64,16 @@
             </a>
         </div>
     </sec:ifAnyGranted>
+
+    <sec:ifAnyGranted roles="ROLE_USER,ROLE_ADMIN">
+        <div class="col-sm-12 " style="overflow-wrap: break-word;margin-top: 15%">
+            <a href="${createLink(controller:'user',action:'myPost')}" class="a">
+                <i class="fas fa-box-open"></i>
+                <label style="font-size: medium">My Posts</label>
+            </a>
+        </div>
+    </sec:ifAnyGranted>
+
 </div>
 
 <div id="createTopicModalDiv">

@@ -15,6 +15,10 @@
             <th>Description</th>
             <th>Posted On</th>
             <th>Document</th>
+            <th>Link</th>
+            <g:if test="${myPost}">
+                <th>Action</th>
+            </g:if>
         </tr>
         </thead>
     <tbody>
@@ -43,6 +47,24 @@
                             -
                         </g:else>
                     </td>
+                    <td>
+                        <g:if test="${post?.link}">
+                            <g:link url="${post?.link}" target="_blank">Visit</g:link>
+                        </g:if>
+                        <g:else>
+                            -
+                        </g:else>
+                    </td>
+                    <g:if test="${myPost}">
+                        <td>
+                            <button class="btn btn-link" id="edit_${post?.id}"
+                                    onclick="editPost(${post?.id})"><i class="far fa-edit"
+                                                                   style="color: blue"></i></button>
+                            <button class="btn btn-link" id="del_${post?.id}"
+                                    onclick="delPost(${post?.id})"><i class="fas fa-trash-alt"
+                                                                                style="color:red;"></i></button>
+                        </td>
+                    </g:if>
                 </tr>
                 </tbody>
             </g:each>
@@ -54,6 +76,11 @@
                 <td></td>
                 <td></td>
                 <td></td>
+                <td></td>
+                <td></td>
+                <g:if test="${myPost}">
+                    <td></td>
+                </g:if>
             </tr>
         </g:else>
     </tbody>
@@ -67,5 +94,44 @@
 <script>
     function openCreatePostModal() {
         $("#createPostModal").modal();
+    }
+
+    function editPost(postId){
+        var postId = postId;
+        var div = document.getElementById("postDiv");
+        $.ajax({
+            url: "${createLink(controller: 'post',action: 'opeEditPost')}",
+            data: {postId: postId},
+            success: function (data) {
+                if(data.status=="200"){
+                    $(div).html(data.template);
+                } else{
+                    $.notify("Unable To Edit Post","error");
+                }
+            },
+            error: function () {
+                $.notify("This Post Can not be Edited","error");
+            }
+        })
+    }
+
+    function delPost(postId){
+        var postId= postId;
+        var div = document.getElementById("postDiv");
+        $.ajax({
+            url: "${createLink(controller: 'post',action: 'deletePost')}",
+            data: {postId: postId},
+            success: function (data) {
+                if(data.status=="200"){
+                    $(div).html(data.template);
+                    $.notify("Post Deleted","success");
+                } else{
+                    $.notify("Unable To Edit Post","error");
+                }
+            },
+            error: function () {
+                $.notify("This Post Can not be Edited","error");
+            }
+        })
     }
 </script>
