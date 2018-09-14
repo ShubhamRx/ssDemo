@@ -2,15 +2,14 @@ package com.ssDemo
 
 import CommandObjects.UserCO
 import grails.transaction.Transactional
+import org.springframework.web.multipart.MultipartFile
 
 @Transactional
 class UserService {
 
-    def serviceMethod() {
+    def documentService
 
-    }
-
-    def bootstrapUser(User user,Role role){
+    def bootstrapUser(User user, Role role) {
         if (!user.save()) {
             user.errors.allErrors.each {
                 println(it)
@@ -25,23 +24,19 @@ class UserService {
         }
     }
 
-    User createUserWithRole(UserCO userCO,Role role,String path){
-        println("Create user")
+    User createUserWithRole(UserCO userCO, MultipartFile file) {
         User user = new User()
-        println("User = "+ user)
         user.properties = userCO.properties
-        println("User = "+user)
-        if(path){
-            println("in if")
+        String path = file.originalFilename
+        if (path) {
             user.photo = true
-            println(user?.photo)
+            documentService.saveProfilePhotoOfUser(file, path, user.UID.toString())
         }
-        if(user.save()){
-            UserRole.create(user,role).save()
-            return user
-        } else{
-            return null
+        if (user.save(flush: true)) {
+            Role role = Role.findByAuthority("ROLE_USER")
+            UserRole.create(user, role).save()
         }
+        return user
     }
 
 }

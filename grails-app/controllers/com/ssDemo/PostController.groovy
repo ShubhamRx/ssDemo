@@ -8,55 +8,40 @@ import grails.plugin.springsecurity.annotation.Secured
 class PostController {
 
     def springSecurityService
+    def postService
+    def topicService
 
     def index() { }
 
     def opeEditPost(){
-        println("Controller: Post, Action: openEditPost")
         User user = springSecurityService.currentUser as User
         Map result = [:]
-        Post post = Post.findById(params?.postId)
+        Post post = postService.getPostById(params.postId)
         result.template = g.render(template: '/templates/editPostTemplate', model: [post: post])
         result.status = "200"
         render result as JSON
     }
 
     def deletePost(){
-        println("Controller: Post, Action: deletePost")
         User user = springSecurityService.currentUser as User
         Map result = [:]
-        Post post = Post.findById(params?.postId)
-        String path = post?.document
-        if(path){
-            File file = new File("${grailsApplication.config.documentFolder}"+path)
-            if(file.exists()){
-                println("File Found....Deleting File")
-                file.delete()
-                println("File Deleted")
-            } else{
-                println("No File For This Topic....Deleting Topic")
-            }
-        }
-        post.delete(flush:true)
-        if(!Post.exists(post.id)){
+        Post post = postService.getPostById(params.postId)
+        if(!postService.deletePost(post)){
+            List<Post> postList = postService.getAllPostOfUser(user)
+            List<Topic> subscribedTopics = topicService.getSubscribedTopicsList(user)
             result.status = "200"
-            List<Post> postList = Post.findAllByUser(user)
-            List<Topic> subscribedTopics = Subscription.findAllByUser(user)*.topic
             result.template = g.render(template: '/templates/postTemplate',model:[user:user, posts: postList, subscribedTopics: subscribedTopics, myPost:true])
-        } else{
+        }
+        else{
             result.status = "500"
         }
         render result as JSON
     }
 
     def editPost(PostCO postCO){
-        println("Controller: Post, Action: editPost")
         User user= springSecurityService.currentUser as User
-        Post post = Post.findById(params?.postId)
-        post.subject = params?.subject
-        post.description = params?.description
-        post.link = params?.link
-        post.save()
+        Post post = postService.getPostById(params.postId)
+        postService.editPost(post,postCO)
         redirect(controller: 'user', action: 'myPost')
     }
 }

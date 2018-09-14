@@ -9,3 +9,7 @@ build/
 .project
 .settings
 .classpath
+*.log
+*.properties
+*.bat
+gradlew

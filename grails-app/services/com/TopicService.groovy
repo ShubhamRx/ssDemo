@@ -23,7 +23,7 @@ class TopicService {
             Subscription subscription = new Subscription()
             subscription.topic = topic
             subscription.user = topic.createdBy
-            subscription.seriousness = com.ssDemo.Enums.Seriousness.CASUAL
+            subscription.seriousness = Seriousness.CASUAL
             subscription.save()
             println("Topic "+topic.topicName+" Created By "+topic.createdBy)
         }
@@ -46,7 +46,7 @@ class TopicService {
             Subscription subscription = new Subscription()
             subscription.user = topic.createdBy
             subscription.topic = topic
-            subscription.seriousness = com.ssDemo.Enums.Seriousness.VERY_SERIOUS
+            subscription.seriousness = Seriousness.VERY_SERIOUS
             subscription.save()
             return topic
         } else{
@@ -72,7 +72,7 @@ class TopicService {
         invite.invitedBy = user
         invite.invitationTo = targetUser
         invite.forTopic = topic
-        invite.status = com.ssDemo.Enums.InviteStatus.INVITED
+        invite.status = InviteStatus.INVITED
         if(invite.save()){
             return invite
         } else{
@@ -148,4 +148,10 @@ class TopicService {
         }
         return post
     }
+
+    List<Topic> getAllCreatedTopicOfUser(User user){
+        return Topic.findAllByCreatedBy(user)
+    }
+
+
 }

@@ -43,16 +43,6 @@
             </div>
 
 
-
-            %{-- <div class="col-sm-6 col-sm-offset-3 form-group">
-                 <label for="editPostDocument">Document</label>
-             </div>
-             <div class="col-sm-6 col-sm-offset-3 form-group">
-                 <input type="file" name="subject" id="editPostDocument" class="">
-             </div>--}%
-
-
-
             <div class="col-sm-6 col-sm-offset-3 form-group">
                 <label for="editPostLink">Link</label>
             </div>
