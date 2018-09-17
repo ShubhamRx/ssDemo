@@ -1,9 +1,6 @@
 package com.ssDemo
 import CommandObjects.TopicCO
-
-import java.sql.Timestamp
-import java.text.DateFormat
-import java.text.SimpleDateFormat
+import com.ssDemo.Enums.Visibility
 
 class Topic {
 
@@ -38,7 +35,7 @@ class Topic {
 
     static List<Topic> getPublicTopicList(){
         List<Topic> publicTopicList = Topic.createCriteria().list {
-            eq('visibility', com.ssDemo.Enums.Visibility.PUBLIC)
+            eq('visibility', Visibility.PUBLIC)
         }
         return publicTopicList
     }

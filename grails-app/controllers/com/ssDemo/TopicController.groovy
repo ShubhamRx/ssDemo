@@ -2,54 +2,44 @@ package com.ssDemo
 
 import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
-import org.apache.tomcat.util.http.fileupload.disk.DiskFileItem
-import org.grails.core.io.MockFileResource
-import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.multipart.commons.CommonsMultipartFile
-
-import java.awt.Desktop
+import com.ssDemo.Enums.Seriousness
 
 @Secured(['ROLE_USER', 'ROLE_ADMIN'])
 class TopicController {
 
     def springSecurityService
     def topicService
-
-    def index() {}
+    def subscriptionService
+    def userService
+    def postService
 
     def unsubscribeAjax() {
-        println("Inside Unsubscribe Ajax Method")
         Map result = [:]
-        User user = params.userId ? User.findById(params.userId) : springSecurityService.currentUser as User
-        Topic topic = Topic.findById(params.topicId)
-        Subscription subscription = Subscription.findByTopicAndUser(topic, user)
-        println("Subscription " + subscription + " is Deleting")
-        try {
-            subscription.delete(flush: true)
+        User user = springSecurityService.currentUser as User
+        Topic topic = topicService.getTopicById(params.topicId)
+        Subscription subscription = subscriptionService.getSubscriptionByUserAndTopic(user,topic)
+        if(!subscriptionService.deleteSubscription(subscription))
+        {
             List<Topic> subscribedTopicList = topicService.getSubscribedTopicsList(user)
-            List<Topic> unsubscribedTopicList = Topic.getPublicTopicList() - subscribedTopicList
+            List<Topic> unsubscribedTopicList = topicService.getUnsubscribedTopicList(subscribedTopicList)
             result.status = "200"
             result.subscribedTemplate = g.render(template: "/templates/subscribedTopicTemplate", model: [user: user, subscribedTopicList: subscribedTopicList])
             result.unsubscribedTemplate = g.render(template: "/templates/unsubscribedTopicTemplate", model: [user: user, unsubscribedTopicList: unsubscribedTopicList])
-        }
-        catch (Exception e) {
+        } else {
             result.status = "500"
-
         }
         render result as JSON
     }
 
     def subscribeAjax() {
-        println("Inside Subscribe Ajax Method")
         Map result = [:]
-        User user = params.userId ? User.findById(params.userId) : springSecurityService.currentUser as User
-        com.ssDemo.Enums.Seriousness seriousness = com.ssDemo.Enums.Seriousness.valueOf(params.seriousness)
-        Topic topic = Topic.findById(params.topicId)
-        println("Getting Subscribed ")
+        User user = springSecurityService.currentUser as User
+        Seriousness seriousness = Seriousness.valueOf(params.seriousness)
+        Topic topic = topicService.getTopicById(params.topicId)
         Subscription subscription = topicService.subscribeToTopic(user, topic, seriousness)
         if (subscription) {
             List<Topic> subscribedTopicList = topicService.getSubscribedTopicsList(user)
-            List<Topic> unsubscribedTopicList = Topic.getPublicTopicList() - subscribedTopicList
+            List<Topic> unsubscribedTopicList = topicService.getUnsubscribedTopicList(subscribedTopicList)
             result.status = "200"
             result.subscribedTemplate = g.render(template: "/templates/subscribedTopicTemplate", model: [user: user, subscribedTopicList: subscribedTopicList])
             result.unsubscribedTemplate = g.render(template: "/templates/unsubscribedTopicTemplate", model: [user: user, unsubscribedTopicList: unsubscribedTopicList])
@@ -60,33 +50,22 @@ class TopicController {
     }
 
     def changeSeriousnessAjax() {
-        println("Controller: Topic, Action: changeSeriousnessAjax")
         Map result = [:]
-        User user = params.userId ? User.findById(params.userId) : springSecurityService.currentUser as User
-        Topic topic = Topic.findById(params.topicId)
-        com.ssDemo.Enums.Seriousness newSeriousness = com.ssDemo.Enums.Seriousness.valueOf(params.seriousness)
-        Subscription subscription = Subscription.findByUserAndTopic(user, topic)
-        com.ssDemo.Enums.Seriousness oldSeriousness = subscription.seriousness
-        result.value = oldSeriousness
-        if (oldSeriousness != newSeriousness) {
-            subscription.seriousness = newSeriousness
-            subscription.save()
-            result.values = subscription.seriousness
-            result.status = "200"
-        } else {
-            result.value = subscription.seriousness
-            result.status = "500"
-        }
+        User user =  springSecurityService.currentUser as User
+        Topic topic = topicService.getTopicById(params.topicId)
+        Seriousness newSeriousness = Seriousness.valueOf(params.seriousness)
+        Subscription subscription = subscriptionService.getSubscriptionByUserAndTopic(user, topic)
+        subscription = subscriptionService.changeSeriousness(subscription, newSeriousness)
+        result.value = subscription.seriousness
+        result.status = "200"
         render result as JSON
     }
 
     def subscribeFromAllTopicsAjax() {
-        println("Controller: Topic, Action: subscribeFromAllTopicsAjax")
         Map result = [:]
-        User user = params.userId ? User.findById(params.userId) : springSecurityService.currentUser as User
-        com.ssDemo.Enums.Seriousness seriousness = com.ssDemo.Enums.Seriousness.valueOf(params?.seriousness)
-        Topic topic = Topic.findById(params.topicId)
-        println("Getting Subscribed ")
+        User user = springSecurityService.currentUser as User
+        Seriousness seriousness = Seriousness.valueOf(params.seriousness)
+        Topic topic = topicService.getTopicById(params.topicId)
         Subscription subscription = topicService.subscribeToTopic(user, topic, seriousness)
         if (subscription) {
             List<Topic> allTopicList = topicService.getAllTopicsForUser(user)
@@ -101,8 +80,8 @@ class TopicController {
     def inviteUser() {
         User user = springSecurityService.currentUser as User
         Map result = [:]
-        Topic topic = Topic.findById(params?.topicId)
-        User targetUser = User.findById(params?.userId)
+        Topic topic = topicService.getTopicById(params.topicId)
+        User targetUser = userService.getUserById(params.userId)
         Invite invite = topicService.inviteUser(user, targetUser, topic)
         if (invite) {
             result.status = "200"
@@ -113,12 +92,12 @@ class TopicController {
     }
 
     def deleteTopic() {
-        User user = params.userId ? User.findById(params.userId) : springSecurityService.currentUser as User
+        User user = springSecurityService.currentUser as User
         Map result = [:]
-        Topic topic = Topic.findById(params.topicId)
+        Topic topic = topicService.getTopicById(params.topicId)
         if (topic) {
             if (topicService.deleteTopic(topic)) {
-                List<Topic> myTopicList = Topic.findAllByCreatedBy(user)
+                List<Topic> myTopicList = topicService.getAllCreatedTopicOfUser(user)
                 result.template = g.render(template: '/templates/commanTopicTemplate', model: [user: user, topicList: myTopicList])
                 result.status = "200"
             } else {
@@ -131,34 +110,26 @@ class TopicController {
     }
 
     def unsubscribeFromAllTopicList() {
-        println("Controller: Topic, Action: unsubscribeFromAllTopicList")
         Map result = [:]
-        User user = params.userId ? User.findById(params.userId) : springSecurityService.currentUser as User
-        Topic topic = Topic.findById(params.topicId)
-        Subscription subscription = Subscription.findByTopicAndUser(topic, user)
-        println("Subscription " + subscription + " is Deleting")
-        try {
-            subscription.delete(flush: true)
+        User user = springSecurityService.currentUser as User
+        Topic topic = topicService.getTopicById(params.topicId)
+        Subscription subscription = subscriptionService.getSubscriptionByUserAndTopic(user,topic)
+        if(!subscriptionService.deleteSubscription(subscription))
+        {
             List<Topic> allTopicList = topicService.getAllTopicsForUser(user)
-            allTopicList.each {
-                println(it)
-            }
             result.status = "200"
             result.template = g.render(template: "/templates/commanTopicTemplate", model: [user: user, topicList: allTopicList, showStatus: true])
 
-        }
-        catch (Exception e) {
+        } else {
             result.status = "500"
-
         }
         render result as JSON
     }
 
     def subscribersList() {
-        println("Controller: Topic, Action: subscribersList")
         Map result = [:]
         User user = springSecurityService.currentUser as User
-        Topic topic = Topic.findById(params?.topicId)
+        Topic topic = topicService.getTopicById(params?.topicId)
         List<User> userList = topic.subscribersList()
         if (userList) {
             result.status = "200"
@@ -170,38 +141,28 @@ class TopicController {
     }
 
     def showPost() {
-        println("Controller: Topic, Action: showPost")
         User user = springSecurityService.currentUser as User
         List<Post> postList = []
-        if(params?.topicId){
-            Topic topic = Topic.findByUuid(params?.topicId)
-            postList = Post.findAllByTopic(topic)
+        if(params.topicId){
+            Topic topic = topicService.getTopicByUid(params.topicId)
+            postList = postService.getAllPostOfTopic(topic)
         } else{
             List<Topic> allTopicList = topicService.getAllTopicsForUser(user)
-             postList = Post.findAllByTopicInList(allTopicList)
+            postList = postService.getAllPostOfTopicList(allTopicList)
         }
-
-        List<Topic> subscribedTopics = Subscription.findAllByUser(user)*.topic
-
+        List<Topic> subscribedTopics = topicService.getSubscribedTopicsList(user)
         render(view: '/User/posts', model: [user: user, posts: postList, subscribedTopics: subscribedTopics])
 
     }
 
     def readDocument(){
-        println("Controller: Topic, Action: readDocument")
         User user = springSecurityService.currentUser as User
-        String path = params?.document
-        if(path){
-            File file = new File("${grailsApplication.config.documentFolder}"+path)
-            if(path.substring(path.length()-3,path.length()).equalsIgnoreCase("pdf")){
-                render(file: file , contentType: "application/pdf")
-            } else{
-                render "File Is Not Pdf"
-            }
+        String path = params.document
+        File file = new File("${grailsApplication.config.documentFolder}"+path)
+        if(file.exists() && path.substring(path.length()-3,path.length()).equalsIgnoreCase("pdf")){
+            render(file: file , contentType: "application/pdf")
         } else{
             redirect(action:'showPost')
         }
-
-
     }
 }

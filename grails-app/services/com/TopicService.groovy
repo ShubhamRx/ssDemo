@@ -5,12 +5,23 @@ import CommandObjects.TopicCO
 import com.ssDemo.Enums.Seriousness
 import grails.transaction.Transactional
 import grails.util.Holders
+import com.ssDemo.Enums.InviteStatus
+import grails.web.servlet.mvc.GrailsParameterMap
+import org.xhtmlrenderer.css.parser.property.PrimitivePropertyBuilders
 
 @Transactional
 class TopicService {
 
-    def serviceMethod() {
+    Integer getTopicCountByUser(User user){
+        return Topic.countByCreatedBy(user)
+    }
 
+    Topic getTopicById(String id){
+        return Topic.get(id)
+    }
+
+    Topic getTopicByUid(String uuid){
+        return Topic.findByUuid(uuid)
     }
 
     def bootstrapTopic(TopicCO topicCO){
@@ -37,6 +48,10 @@ class TopicService {
             }
         }
         return subscribedTopicList
+    }
+
+    List<Topic> getUnsubscribedTopicList(List<Topic> subscribedTopicList){
+        return(Topic.getPublicTopicList() - subscribedTopicList)
     }
 
     Topic createTopic(TopicCO topicCO){
@@ -119,12 +134,9 @@ class TopicService {
     }
 
     Topic editTopic(Topic topic, TopicCO topicCO){
-        topic.properties = topicCO.properties
-        if(topic.save()){
-            return topic
-        } else{
-            return null
-        }
+        topic.topicName = topicCO.topicName
+        topic.visibility = topicCO.visibility
+        return topic.save(flush:true)
     }
 
     List<Topic> getAllTopicsForUser(User user){
@@ -135,22 +147,35 @@ class TopicService {
         return allTopicList
     }
 
-    Post createPost(PostCO postCO,String path=null){
-        Post post = new Post()
-        post.properties = postCO.properties
-        if(path){
-            post.document = path
-        }
-        if(post.save()){
-            return post
-        } else{
-            return null
-        }
-        return post
-    }
-
     List<Topic> getAllCreatedTopicOfUser(User user){
         return Topic.findAllByCreatedBy(user)
+    }
+
+    List<Topic> getMostSubscribedTopics(){
+        def topicWithNumberOfSubscriptions = Subscription.withCriteria {
+            projections{
+                groupProperty('topic')
+                count()
+            }
+        }
+
+        SortedMap<Integer, Topic> topicMap=new TreeMap<>()
+
+        topicWithNumberOfSubscriptions.each{
+            topicMap.put(it[1] as Integer,it[0] as Topic)
+        }
+
+        Map reverseTopicMap = [:]
+        topicMap.reverseEach{ key, value ->
+            reverseTopicMap[key] = value
+        }
+
+        List<Topic> topicList = []
+
+        topicList.add(reverseTopicMap[1] as Topic)
+        topicList.add(reverseTopicMap[2] as Topic)
+
+        return topicList
     }
 
 

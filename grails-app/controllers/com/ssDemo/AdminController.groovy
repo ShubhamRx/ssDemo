@@ -10,8 +10,6 @@ class AdminController {
     def topicService
     def subscriptionService
 
-    def index() {}
-
     def listUser() {
         User user = springSecurityService.currentUser as User
         List<User> userList = User.list()

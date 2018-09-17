@@ -12,7 +12,7 @@
 <body>
 <div class="col-sm-7">
   <div class="col-sm-10 col-sm-offset-1" style="margin-top: 20%">
-      <g:render template="/templates/publicTopicsTemplate" model="[topicList:topicList ?: new com.ssDemo.PublicController().getMostSubscribedTopics()]"/>
+      <g:render template="/templates/publicTopicsTemplate" model="[topicList:topicList]"/>
   </div>
 </div>
 

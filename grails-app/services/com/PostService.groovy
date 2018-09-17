@@ -3,6 +3,7 @@ package com.ssDemo
 import CommandObjects.PostCO
 import grails.transaction.Transactional
 import grails.util.Holders
+import org.springframework.web.multipart.MultipartFile
 
 @Transactional
 class PostService {
@@ -31,10 +32,30 @@ class PostService {
         return Post.findAllByUser(user)
     }
 
+    List<Post> getAllPostOfTopic(Topic topic){
+        return Post.findAllByTopic(topic)
+    }
+
+    List<Post> getAllPostOfTopicList(List<Topic> allTopicList){
+        return Post.findAllByTopicInList(allTopicList)
+    }
+
     Post editPost(Post post,PostCO postCO){
         post.subject = postCO.subject
         post.description = postCO.description
         post.link = postCO.link
         return post.save(flush:true)
+    }
+
+    void createPost(PostCO postCO, MultipartFile file){
+        String path = file.originalFilename
+        Post post = new Post()
+        post.properties = postCO.properties
+        if(path && path.substring(path.length()-3,path.length()).equalsIgnoreCase("pdf"))
+        {
+            post.document = path
+            file.transferTo(new File("${Holders.grailsApplication.config.documentFolder}"+path))
+        }
+        post.save(flush:true)
     }
 }

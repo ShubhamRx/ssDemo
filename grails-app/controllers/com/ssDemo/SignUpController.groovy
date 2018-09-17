@@ -17,11 +17,7 @@ import javax.servlet.ServletException
 class SignUpController {
 
     def userService
-    def springSecurityService
 
-    def index() {}
-
-    @Secured(['permitAll'])
     def openSignUpForm() {
         UserCO userCO = new UserCO()
         Map result = [:]

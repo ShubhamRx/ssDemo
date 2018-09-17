@@ -11,8 +11,6 @@ class PostController {
     def postService
     def topicService
 
-    def index() { }
-
     def opeEditPost(){
         User user = springSecurityService.currentUser as User
         Map result = [:]
